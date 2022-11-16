@@ -13,4 +13,24 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+class SignUpSerializer(serializers.ModelSerializer):
+    """Регистрация пользователя."""
+
+    email = serializers.EmailField(
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'first_name', 'last_name', 'password')
+    # валидатор не используется
+    # def validate_username(self, value):
+    #     if value == 'me':
+    #         raise serializers.ValidationError(
+    #             'Имя пользователя "me" использовать нельзя!')
+    #     return value
