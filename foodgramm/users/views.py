@@ -11,7 +11,7 @@ from rest_framework.pagination import PageNumberPagination
 User = get_user_model()
 
 
-class UserViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin, viewsets.GenericViewSet):
+class UserListViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
