@@ -1,22 +1,50 @@
 from django.contrib.auth import get_user_model
 from requests import Response
 from rest_framework import filters, permissions, status, viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import UserSerializer, SignUpSerializer
+from .serializers import UserSerializer, CustomUserSerializer, CustomUserCreateSerializer
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
 from rest_framework.pagination import PageNumberPagination
+from djoser.views import UserViewSet
 
 
 User = get_user_model()
 
 
-class UserListViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin, viewsets.GenericViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+class UserListViewSet(UserViewSet):
+    serializer_class = CustomUserSerializer
     pagination_class = PageNumberPagination
 
+    def get_queryset(self):
+        return User.objects.all()
 
+
+class UserCreateViewSet(UserViewSet):
+    serializer_class = CustomUserCreateSerializer
+    #
+    #
+    # def get_queryset(self):
+    #     return User.objects.all()
+
+
+# class CustomLogout(APIView):
+#     permission_classes = (IsAuthenticated,)
+#
+#     def post(self, request):
+#         try:
+#             refresh_token = request.data["refresh_token"]
+#             token = RefreshToken(refresh_token)
+#             # print(request.data)
+#             # token.blacklist()
+#
+#             # return Response(status=status.HTTP_205_RESET_CONTENT)
+#         # except Exception as e:
+#         #     print('///')
+#         #     return Response(status=status.HTTP_400_BAD_REQUEST)
+#
 
 
 # class SignUp(APIView):

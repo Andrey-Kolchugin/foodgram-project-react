@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
+    'recipes',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'djoser',
 ]
 
@@ -134,7 +136,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5,
 }
 
@@ -143,4 +145,20 @@ SIMPLE_JWT = {
     # Устанавливаем срок жизни токена
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+#
+DJOSER = {
+    "LOGIN_FIELD": "email",
+    'PERMISSIONS': {
+    'user': ['rest_framework.permissions.AllowAny'],
+    'user_list': ['rest_framework.permissions.AllowAny'],
+    },
+    # 'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
+    # 'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
+    # 'ACTIVATION_URL': '#/activate/{uid}/{token}',
+    # 'SEND_ACTIVATION_EMAIL': False,
+    'SERIALIZERS': {
+    'user_create': 'users.serializers.CustomUserCreateSerializer',
+    'current_user': 'users.serializers.CustomUserSerializer',
+    },
 }

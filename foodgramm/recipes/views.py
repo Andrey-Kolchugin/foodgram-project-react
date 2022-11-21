@@ -1,3 +1,33 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from .serializer import RecipesSerializer, TagSerializer, FavoriteSerializer
+from .models import Recipes, Tag, Favorite
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import mixins
 
-# Create your views here.
+
+class RecipesViewSet(viewsets.ModelViewSet):
+    serializer_class = RecipesSerializer
+    queryset = Recipes.objects.all()
+    pagination_class = PageNumberPagination
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TagSerializer
+    queryset = Tag.objects.all()
+
+
+class FavoriteViewSet(
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+
+    serializer_class = FavoriteSerializer
+
+    def perform_create(self, serializer):
+        recipes = get_object_or_404(
+            Recipes,
+            id=self.kwargs.get('recipes_id'),
+        )
+        serializer.save(author=self.request.user, recipes=recipes)
