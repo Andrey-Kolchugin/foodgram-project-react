@@ -22,7 +22,7 @@ class User(AbstractUser):
         blank=False,
     )
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['username',]
 
     def __unicode__(self):
         return self.username
