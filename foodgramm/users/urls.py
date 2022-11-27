@@ -5,7 +5,6 @@ from djoser.views import UserViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 v1_router = DefaultRouter()
-#
 v1_router.register('', UserListViewSet, basename='users')
 
 urlpatterns = [
@@ -13,5 +12,4 @@ urlpatterns = [
     path('token/logout/', BlacklistRefreshView.as_view(), name="logout"),
     path('token/login/', TokenObtainPairView.as_view(), name="login"),
     path('', include(v1_router.urls)),
-    # path('token/logout/', CustomLogout.as_view(), name='auth_logout'),
 ]

@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
-    'recipes',
+    'recipes.apps.RecipesConfig',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'djoser',
