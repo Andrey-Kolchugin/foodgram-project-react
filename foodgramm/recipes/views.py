@@ -2,8 +2,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, generics
 from rest_framework.permissions import IsAuthenticated
 
-from .serializer import RecipesSerializer, TagSerializer, IngredientsSerializer, FavoriteSerializer
-from .models import Recipes, Tag, Favorite, Ingredients
+from .serializer import RecipesSerializer, TagSerializer, IngredientsSerializer
+from .models import Recipes, Tag, Ingredients
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import mixins
 
@@ -26,24 +26,24 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
 
 
-class FavoriteViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = FavoriteSerializer
-
-    # def get_queryset(self):
-    #     return get_object_or_404(
-    #         Recipes,
-    #         id=self.kwargs.get('recipes_id'))
-
-    def perform_create(self, serializer):
-        # user = self.requests.user
-        recipes = get_object_or_404(
-            Recipes,
-            id=serializer.data.get('id')
-        )
-        print(serializer.data)
-        serializer.save()
+# class FavoriteViewSet(
+#     mixins.CreateModelMixin,
+#     mixins.DestroyModelMixin,
+#     viewsets.GenericViewSet
+# ):
+#     permission_classes = (IsAuthenticated,)
+#     serializer_class = FavoriteSerializer
+#
+#     # def get_queryset(self):
+#     #     return get_object_or_404(
+#     #         Recipes,
+#     #         id=self.kwargs.get('recipes_id'))
+#
+#     def perform_create(self, serializer):
+#         # user = self.requests.user
+#         recipes = get_object_or_404(
+#             Recipes,
+#             id=serializer.data.get('id')
+#         )
+#         print(serializer.data)
+#         serializer.save()

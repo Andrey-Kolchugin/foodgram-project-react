@@ -56,6 +56,7 @@ class UserSubscribeSerializer(UserSerializer):
         )
         read_only_fields = '__all__',
 
+    @staticmethod
     def get_is_subscribed(*args):
         return True
 

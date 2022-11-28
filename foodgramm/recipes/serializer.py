@@ -1,27 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import Tag, Ingredients, Recipes, Favorite
+from .models import Tag, Ingredients, Recipes
 
 
 User = get_user_model()
-
-
-class FavoriteSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для списка избранного.
-    """
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-    recipes = serializers.IntegerField
-
-
-    class Meta:
-        model = Favorite
-        fields = '__all__'
-
-
-
 
 
 class IngredientsSerializer(serializers.ModelSerializer):

@@ -78,13 +78,13 @@ class UserListViewSet(UserViewSet):
 
 
 
-class UserCreateViewSet(UserViewSet):
-    serializer_class = CustomUserCreateSerializer
-
-    #
-    #
-    # def get_queryset(self):
-    #     return User.objects.all()
+# class UserCreateViewSet(UserViewSet):
+#     serializer_class = CustomUserCreateSerializer
+#
+#     #
+#     #
+#     # def get_queryset(self):
+#     #     return User.objects.all()
 
 
 
@@ -108,28 +108,3 @@ class BlacklistRefreshView(APIView):
         #     print('///')
         #     return Response(status=status.HTTP_400_BAD_REQUEST)
         # return Response(status=status.HTTP_200_OK)
-#
-
-
-# class SignUp(APIView):
-#     # permission_classes = (permissions.AllowAny,)
-#     def post(self, request):
-#         serializer = SignUpSerializer(data=request.data)
-#         if serializer.is_valid(raise_exception=True):
-#             serializer.save()
-        #
-        #     username = request.data.get('username')
-        #     email = request.data.get('email')
-        #     user = get_object_or_404(User, username=username, email=email)
-        #
-        #     confirmation_code = default_token_generator.make_token(user)
-        #
-        #     user.password = confirmation_code
-        #     user.confirmation_code = confirmation_code
-        # send_mail(
-        #     'Код подтверждения',
-        #     confirmation_code,
-        #     from_email=None,
-        #     recipient_list=[user.email]
-        # )
-        # return Response(serializer.data, status=status.HTTP_200_OK)

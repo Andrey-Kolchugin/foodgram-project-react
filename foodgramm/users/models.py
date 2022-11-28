@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from foodgramm.recipes.models import Recipes
 
 
 
@@ -29,6 +30,14 @@ class User(AbstractUser):
         symmetrical=False,
         blank=True
     )
+    recipes = models.ForeignKey(
+        Recipes,
+        verbose_name='рецепты',
+        related_name='recipes',
+        on_delete = models.SET_NULL,
+        blank=True
+    )
+
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username',]
@@ -42,26 +51,26 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
 
-class Follow(models.Model):
-    """Модель подписки на авторов"""
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Подписчик'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following',
-        verbose_name='Автор'
-    )
-
-    class Meta:
-        verbose_name = 'Фолловер'
-        verbose_name_plural = 'Списки подписчиков'
-        constraints = [
-            models.UniqueConstraint(
-                fields=["author", "user"], name="unique_following"
-            )
-        ]
+# class Follow(models.Model):
+#     """Модель подписки на авторов"""
+#     user = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         related_name='follower',
+#         verbose_name='Подписчик'
+#     )
+#     author = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         related_name='following',
+#         verbose_name='Автор'
+#     )
+#
+#     class Meta:
+#         verbose_name = 'Фолловер'
+#         verbose_name_plural = 'Списки подписчиков'
+#         constraints = [
+#             models.UniqueConstraint(
+#                 fields=["author", "user"], name="unique_following"
+#             )
+#         ]
