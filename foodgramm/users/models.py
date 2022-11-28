@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from foodgramm.recipes.models import Recipes
+
 
 
 
@@ -30,13 +30,13 @@ class User(AbstractUser):
         symmetrical=False,
         blank=True
     )
-    recipes = models.ForeignKey(
-        Recipes,
-        verbose_name='рецепты',
-        related_name='recipes',
-        on_delete = models.SET_NULL,
-        blank=True
-    )
+    # recipes = models.ForeignKey(
+    #     Recipes,
+    #     verbose_name='рецепты',
+    #     related_name='recipes',
+    #     on_delete = models.SET_NULL,
+    #     blank=True
+    # )
 
 
     USERNAME_FIELD = 'email'

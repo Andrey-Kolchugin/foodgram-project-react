@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from .models import Ingredients, Recipes, Tag, Favorite
+from .models import Ingredients, Recipes, Tag
 
 User = get_user_model()
 
@@ -22,7 +22,7 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'color', 'slug')
     empty_value_display = '-пусто-'
 
-@admin.register(Favorite)
-class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'recipes')
-    empty_value_display = '-пусто-'
+# @admin.register(Favorite)
+# class FavoriteAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'user', 'recipes')
+#     empty_value_display = '-пусто-'

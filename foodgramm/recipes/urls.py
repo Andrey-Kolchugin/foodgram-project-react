@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import RecipesViewSet, TagViewSet, FavoriteViewSet, IngredientsViewSet
+from .views import RecipesViewSet, TagViewSet, IngredientsViewSet
 from djoser.serializers import SetPasswordSerializer
 from rest_framework_simplejwt import views
 

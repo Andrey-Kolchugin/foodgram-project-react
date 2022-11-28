@@ -79,26 +79,26 @@ class Recipes(models.Model):
         verbose_name_plural = 'Рецепты'
 
 
-class Favorite(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        blank=False,
-        related_name='user',
-        verbose_name='Юзер',
-    )
-    recipes = models.ForeignKey(
-        Recipes,
-        on_delete=models.CASCADE,
-        blank=False,
-        related_name='recipes',
-        verbose_name='Рецепт',
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipes'], name='unique_user_recipes'
-            )
-        ]
-        verbose_name = 'Избранное'
+# class Favorite(models.Model):
+#     user = models.ForeignKey(
+#         User,
+#         on_delete=models.CASCADE,
+#         blank=False,
+#         related_name='user',
+#         verbose_name='Юзер',
+#     )
+#     recipes = models.ForeignKey(
+#         Recipes,
+#         on_delete=models.CASCADE,
+#         blank=False,
+#         related_name='recipes',
+#         verbose_name='Рецепт',
+#     )
+#
+#     class Meta:
+#         constraints = [
+#             models.UniqueConstraint(
+#                 fields=['user', 'recipes'], name='unique_user_recipes'
+#             )
+#         ]
+#         verbose_name = 'Избранное'

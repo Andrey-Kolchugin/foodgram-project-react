@@ -13,8 +13,6 @@ class UserAdmin(admin.ModelAdmin):
         'username',
         'first_name',
         'last_name',
-        'recipes',
-        'subscribe',
         'is_staff')
     search_fields = ('email', 'username',)
     list_filter = ('email', 'username',)
