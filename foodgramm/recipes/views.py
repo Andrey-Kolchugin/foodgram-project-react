@@ -1,11 +1,13 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from .serializer import RecipesSerializer, TagSerializer, IngredientsSerializer
-from .models import Recipes, Tag, Ingredients
+from .models import Recipes, Tag, Ingredients, Favorite
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import mixins
+from rest_framework.response import Response
 
 
 
@@ -20,30 +22,34 @@ class RecipesViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     # permission_classes = (IsAuthenticated,)
 
+    @action(methods=('POST', 'DELETE'), detail=True)
+    def favorite(self, request, id):
+        recipes = get_object_or_404(Recipes, pk=id)
+        if request.method == 'POST':
+            if Favorite.objects.filter(user=self.request.user, recipes=recipes).exists():
+                content = {
+                    "errors": "Рецепт уже в избранном!"
+                }
+                return Response(content, status=status.HTTP_400_BAD_REQUEST)
+            favorite = Favorite(user = self.request.user, recipes=recipes)
+            favorite.save()
+            return Response(status=status.HTTP_201_CREATED)
+
+        # if request.method == 'DELETE':
+        #     if not User.objects.filter(id=user.id, subscribe=following).exists():
+        #         content = {
+        #             "errors": "Подписки на этого пользователя не существует!"
+        #         }
+        #         return Response(content, status=status.HTTP_400_BAD_REQUEST)
+        #     user.subscribe.remove(following)
+        #     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
 
 
-# class FavoriteViewSet(
-#     mixins.CreateModelMixin,
-#     mixins.DestroyModelMixin,
-#     viewsets.GenericViewSet
-# ):
-#     permission_classes = (IsAuthenticated,)
-#     serializer_class = FavoriteSerializer
-#
-#     # def get_queryset(self):
-#     #     return get_object_or_404(
-#     #         Recipes,
-#     #         id=self.kwargs.get('recipes_id'))
-#
-#     def perform_create(self, serializer):
-#         # user = self.requests.user
-#         recipes = get_object_or_404(
-#             Recipes,
-#             id=serializer.data.get('id')
-#         )
-#         print(serializer.data)
-#         serializer.save()
+

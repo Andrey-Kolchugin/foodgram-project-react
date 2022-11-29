@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import Tag, Ingredients, Recipes
+from .models import Tag, Ingredients, Recipes, Favorite
 
 
 User = get_user_model()

@@ -1,7 +1,7 @@
 import http
-from django.core.serializers.json import DjangoJSONEncoder
+
 from django.contrib.auth import get_user_model
-# from requests import Response, status_codes
+
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -69,6 +69,8 @@ class UserListViewSet(UserViewSet):
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
             user.subscribe.remove(following)
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 
 
 
