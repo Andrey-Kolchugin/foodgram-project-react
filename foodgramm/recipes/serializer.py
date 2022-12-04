@@ -1,3 +1,5 @@
+import base64
+import uuid
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Tag, Ingredients, Recipes, Favorite
