@@ -6,7 +6,7 @@ from rest_framework.validators import UniqueValidator
 from djoser.serializers import UserSerializer, UserCreateSerializer
 
 from recipes.models import Recipes
-from recipes.serializer import RecipesSerializer
+
 
 
 User = get_user_model()
