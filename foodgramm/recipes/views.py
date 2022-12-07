@@ -23,11 +23,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     # permission_classes = (IsAuthenticated,)
 
-    # @action(detail=False)
-    # def download_shopping_cart(self, request):
-    #     user = self.request.user
-    #     queryset1 = ShoppingCart.objects.filter(user=user).values_list('recipes')
-    #     queryset2 = Recipes.objects.filter(id__in=queryset1)
+    @action(detail=False)
+    def download_shopping_cart(self, request):
+        user = self.request.user
+        queryset1 = ShoppingCart.objects.filter(user=user)
+        queryset2 = Recipes.objects.filter(id__in=queryset1)
     #     test = Recipes.objects.get(id=2)
     #     test2 = test.ingredients.all().values_list('name')
     #     # queryset3 = queryset2.to_ingredients.all()

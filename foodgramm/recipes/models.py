@@ -96,7 +96,7 @@ class Favorite(models.Model):
         Recipes,
         on_delete=models.CASCADE,
         blank=False,
-        related_name='recipes',
+        related_name='to_recipes',
         verbose_name='Рецепт',
     )
 
