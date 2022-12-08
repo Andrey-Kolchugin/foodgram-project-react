@@ -126,40 +126,40 @@ class ShoppingCart(models.Model):
         verbose_name = 'Корзина'
 
 
-# class AmountIngredient(models.Model):
-#     """
-#     Количество ингридиентов в блюде.
-#     """
-#     recipe = models.ForeignKey(
-#         Recipes,
-#         verbose_name='Используется в этих рецептах',
-#         related_name='ingredient',
-#         on_delete=models.CASCADE,
-#     )
-#     ingredients = models.ForeignKey(
-#         Ingredients,
-#         verbose_name='Связанные ингредиенты',
-#         related_name='recipe',
-#         on_delete=models.CASCADE,
-#     )
-#     amount = models.PositiveSmallIntegerField(
-#         verbose_name='Количество',
-#         default=1,
-#         validators=(
-#             MinValueValidator(
-#                 1, 'Должно быть указано количество!'
-#             ),
-#             MaxValueValidator(
-#                 10000, 'Зачем вам так много?'
-#             ),
-#         ),
-#     )
-#
-#     class Meta:
-#         verbose_name = 'Ингредиент'
-#         verbose_name_plural = 'Ингредиенты'
-#         ordering = 'recipe',
-#         unique_together = ['recipe', 'ingredients']
-#
-#     def __str__(self):
-#         return f'{self.amount} {self.ingredients}'
+class IngredientInRecipe(models.Model):
+    """
+    Ингредиенты в каждом рецепте.
+    """
+    recipe = models.ForeignKey(
+        Recipes,
+        verbose_name='Рецепт для этих ингредиентов',
+        related_name='ingredient',
+        on_delete=models.CASCADE,
+    )
+    ingredients = models.ForeignKey(
+        Ingredients,
+        verbose_name='Ингредиенты в этом рецепте',
+        related_name='recipe',
+        on_delete=models.CASCADE,
+    )
+    amount = models.PositiveSmallIntegerField(
+        verbose_name='Количество',
+        default=1,
+        validators=(
+            MinValueValidator(
+                1, 'Укажите кол-во от 1 до 9999'
+            ),
+            MaxValueValidator(
+                9999, 'Укажите кол-во от 1 до 9999'
+            ),
+        ),
+    )
+
+    class Meta:
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в репепте'
+        ordering = 'pk',
+        unique_together = ['recipe', 'ingredients']
+
+    def __str__(self):
+        return f'{self.amount} {self.ingredients}'

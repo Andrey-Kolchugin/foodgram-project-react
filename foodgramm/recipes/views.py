@@ -1,15 +1,17 @@
+from datetime import datetime
+
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, generics, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
 from .serializer import TagSerializer, IngredientsSerializer, RecipesSerializer
-from .models import Recipes, Tag, Ingredients, Favorite, ShoppingCart
+from .models import Recipes, Tag, Ingredients, Favorite, ShoppingCart, IngredientInRecipe
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import mixins
 from rest_framework.response import Response
 from django.db.models import Sum, F
-
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -23,15 +25,68 @@ class RecipesViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
     # permission_classes = (IsAuthenticated,)
 
+    def get_queryset(self):
+        """Получает queryset в соответствии с параметрами запроса.
+        Returns:
+            QuerySet: Список запрошенных объектов.
+        """
+        queryset = self.queryset
+
+        tags = self.request.query_params.getlist('tags')
+        if tags:
+            queryset = queryset.filter(
+                tags__slug__in=tags).distinct()
+
+        author = self.request.query_params.get('author')
+        if author:
+            queryset = queryset.filter(author=author)
+
+        # Следующие фильтры только для авторизованного пользователя
+        user = self.request.user
+        if user.is_anonymous:
+            return queryset
+
+        is_in_shopping = self.request.query_params.get('is_in_shopping_cart')
+        if is_in_shopping in ('1', 'true',):
+            queryset = queryset.filter(id__in=ShoppingCart.objects.filter(user=user).values('recipes'))
+        elif is_in_shopping in ('0', 'false',):
+            queryset = queryset.exclude(id__in=ShoppingCart.objects.filter(user=user).values('recipes'))
+
+        # is_favorited = self.request.query_params.get(conf.FAVORITE)
+        # if is_favorited in conf.SYMBOL_TRUE_SEARCH:
+        #     queryset = queryset.filter(favorite=user.id)
+        # if is_favorited in conf.SYMBOL_FALSE_SEARCH:
+        #     queryset = queryset.exclude(favorite=user.id)
+
+        return queryset
+
     @action(detail=False)
     def download_shopping_cart(self, request):
         user = self.request.user
-        queryset1 = ShoppingCart.objects.filter(user=user)
-        queryset2 = Recipes.objects.filter(id__in=queryset1)
-    #     test = Recipes.objects.get(id=2)
-    #     test2 = test.ingredients.all().values_list('name')
-    #     # queryset3 = queryset2.to_ingredients.all()
-    #     print(test2)
+        query = ShoppingCart.objects.filter(user=user)
+        if not query.exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        ingredients = IngredientInRecipe.objects.filter(
+            recipe__in=(query.values('recipes'))
+        ).values(
+            ingredient=F('ingredients__name'),
+            measure=F('ingredients__measurement_unit')
+        ).annotate(amount=Sum('amount'))
+        filename = f'{user.username}_shopping_cart.txt'
+        shopping_list = (
+            f'Список покупок для:\n\n{user.username}\n\n'
+            f'от {datetime.now()}\n\n'
+        )
+        for ing in ingredients:
+            shopping_list += (
+                f'{ing["ingredient"]}: {ing["amount"]} {ing["measure"]}\n'
+            )
+
+        response = HttpResponse(
+            shopping_list, content_type='text.txt; charset=utf-8'
+        )
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+        return response
 
     @action(methods=('POST', 'DELETE'), detail=True)
     def favorite(self, request, pk):
@@ -61,8 +116,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
             Favorite.objects.filter(user=self.request.user, recipes=recipes).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-
     @action(methods=('POST', 'DELETE'), detail=True)
     def shopping_cart(self, request, pk):
         user = self.request.user
@@ -88,10 +141,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
             ShoppingCart.objects.filter(user=self.request.user, recipes=recipes).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-
-
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
