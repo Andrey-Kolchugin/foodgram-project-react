@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
-from .models import Tag, Ingredients, Recipes, Favorite
+from .models import Tag, Ingredients, Recipes, Favorite, ShoppingCart, IngredientInRecipe
 from drf_extra_fields.fields import Base64ImageField
 from users.serializers import CustomUserSerializer
 from django.db.models import F
@@ -40,7 +40,7 @@ class RecipesSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = SerializerMethodField()
     is_favorited = SerializerMethodField()
-    # is_in_shopping_cart = SerializerMethodField()
+    is_in_shopping_cart = SerializerMethodField()
     image = Base64ImageField()
     ingredients = IngredientsSerializer(many=True, read_only=True)
 
@@ -65,62 +65,82 @@ class RecipesSerializer(serializers.ModelSerializer):
         if user.is_anonymous:
             return False
         return Favorite.objects.filter(user=user, recipes=obj).exists()
-    #
-    # def get_is_in_shopping_cart(self, obj):
-    #     """Проверка - находится ли рецепт в списке  покупок.
-    #     Args:
-    #         obj (Recipe): Переданный для проверки рецепт.
-    #     Returns:
-    #         bool: True - если рецепт в `списке покупок`
-    #         у запращивающего пользователя, иначе - False.
-    #     """
-    #     user = self.context.get('request').user
-    #     if user.is_anonymous:
-    #         return False
-    #     return user.carts.filter(id=obj.id).exists()
 
-    # def create(self, validated_data):
-    #     """Создаёт рецепт.
-    #     Args:
-    #         validated_data (dict): Данные для создания рецепта.
-    #     Returns:
-    #         Recipe: Созданый рецепт.
-    #     """
-    #     image = validated_data.pop('image')
-    #     tags = validated_data.pop('tags')
-    #     ingredients = validated_data.pop('ingredients')
-    #     recipe = Recipe.objects.create(image=image, **validated_data)
-    #     recipe.tags.set(tags)
-    #     recipe_amount_ingredients_set(recipe, ingredients)
-    #     return recipe
-    #
-    # def update(self, recipe, validated_data):
-    #     """Обновляет рецепт.
-    #     Args:
-    #         recipe (Recipe): Рецепт для изменения.
-    #         validated_data (dict): Изменённые данные.
-    #     Returns:
-    #         Recipe: Обновлённый рецепт.
-    #     """
-    #     tags = validated_data.get('tags')
-    #     ingredients = validated_data.get('ingredients')
-    #
-    #     recipe.image = validated_data.get(
-    #         'image', recipe.image)
-    #     recipe.name = validated_data.get(
-    #         'name', recipe.name)
-    #     recipe.text = validated_data.get(
-    #         'text', recipe.text)
-    #     recipe.cooking_time = validated_data.get(
-    #         'cooking_time', recipe.cooking_time)
-    #
-    #     if tags:
-    #         recipe.tags.clear()
-    #         recipe.tags.set(tags)
-    #
-    #     if ingredients:
-    #         recipe.ingredients.clear()
-    #         recipe_amount_ingredients_set(recipe, ingredients)
-    #
-    #     recipe.save()
-    #     return recipe
+    def get_is_in_shopping_cart(self, obj):
+        """
+        Проверка - находится ли рецепт в списке  покупок.
+        """
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return ShoppingCart.objects.filter(user=user, recipes=obj).exists()
+
+    def validate(self, data):
+        """
+        Проверка вводных данных при создании/редактировании рецепта.
+        """
+        name = str(self.initial_data.get('name')).strip()
+        tags = self.initial_data.get('tags')
+        ingredients = self.initial_data.get('ingredients')
+        values_as_list = (tags, ingredients)
+
+        for value in values_as_list:
+            if not isinstance(value, list):
+                raise ValidationError(
+                    f'"{value}" должен быть в формате "[]"'
+                )
+        data['name'] = name.capitalize()
+        data['tags'] = tags
+        data['author'] = self.context.get('request').user
+        return data
+
+    def create(self, validated_data):
+        """
+        Создаёт рецепт.
+        """
+        image = validated_data.pop('image')
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipes.objects.create(image=image, **validated_data)
+        recipe.tags.set(tags)
+        objs = [
+            IngredientInRecipe(
+        recipe=recipe,
+        ingredients=ingredient['ingredient'],
+        amount=ingredient['amount'],
+            ) for ingredient in ingredients
+        ]
+        IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+        return recipe
+
+    def update(self, recipe, validated_data):
+        """
+        Обновляет рецепт.
+        """
+        tags = validated_data.get('tags')
+        ingredients = validated_data.get('ingredients')
+        recipe.image = validated_data.get(
+            'image', recipe.image)
+        recipe.name = validated_data.get(
+            'name', recipe.name)
+        recipe.text = validated_data.get(
+            'text', recipe.text)
+        recipe.cooking_time = validated_data.get(
+            'cooking_time', recipe.cooking_time)
+
+        if tags:
+            recipe.tags.clear()
+            recipe.tags.set(tags)
+
+        if ingredients:
+            recipe.ingredients.clear()
+            objs = [
+            IngredientInRecipe(
+                recipe=recipe,
+                ingredients=ingredient['ingredient'],
+                amount=ingredient['amount'],
+                ) for ingredient in ingredients
+            ]
+            IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+        recipe.save()
+        return recipe

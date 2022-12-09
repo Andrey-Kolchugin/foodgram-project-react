@@ -12,18 +12,20 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework import mixins
 from rest_framework.response import Response
 from django.db.models import Sum, F
+from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
     queryset = Ingredients.objects.all()
+    permission_classes = (AdminOrReadOnly,)
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
     serializer_class = RecipesSerializer
     queryset = Recipes.objects.all()
     pagination_class = PageNumberPagination
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (AuthorStaffOrReadOnly,)
 
     def get_queryset(self):
         """Получает queryset в соответствии с параметрами запроса.
@@ -52,11 +54,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
         elif is_in_shopping in ('0', 'false',):
             queryset = queryset.exclude(id__in=ShoppingCart.objects.filter(user=user).values('recipes'))
 
-        # is_favorited = self.request.query_params.get(conf.FAVORITE)
-        # if is_favorited in conf.SYMBOL_TRUE_SEARCH:
-        #     queryset = queryset.filter(favorite=user.id)
-        # if is_favorited in conf.SYMBOL_FALSE_SEARCH:
-        #     queryset = queryset.exclude(favorite=user.id)
+        is_favorited = self.request.query_params.get('is_favorited')
+        if is_favorited in ('1', 'true',):
+            queryset = queryset.filter(id__in=Favorite.objects.filter(user=user).values('recipes'))
+        if is_favorited in ('0', 'false',):
+            queryset = queryset.exclude(id__in=Favorite.objects.filter(user=user).values('recipes'))
 
         return queryset
 
@@ -146,3 +148,4 @@ class RecipesViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
+    permission_classes = (AdminOrReadOnly,)

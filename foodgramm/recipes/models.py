@@ -136,7 +136,7 @@ class IngredientInRecipe(models.Model):
         related_name='ingredient',
         on_delete=models.CASCADE,
     )
-    ingredients = models.ForeignKey(
+    ingredient = models.ForeignKey(
         Ingredients,
         verbose_name='Ингредиенты в этом рецепте',
         related_name='recipe',
@@ -159,7 +159,7 @@ class IngredientInRecipe(models.Model):
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в репепте'
         ordering = 'pk',
-        unique_together = ['recipe', 'ingredients']
+        unique_together = ['recipe', 'ingredient']
 
     def __str__(self):
         return f'{self.amount} {self.ingredients}'
