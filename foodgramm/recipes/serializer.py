@@ -162,7 +162,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
-    ingredients = IngredientsWriteSerializer(many=True, read_only=True)
+    ingredients = serializers.SlugRelatedField(slug_field=id, queryset=Ingredients.objects.all())
     tags = serializers.ListField(
         child=serializers.SlugRelatedField(
             slug_field='id',
