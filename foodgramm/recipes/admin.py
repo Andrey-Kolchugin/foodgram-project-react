@@ -5,6 +5,11 @@ from .models import Ingredients, Recipes, Tag, Favorite, ShoppingCart, Ingredien
 User = get_user_model()
 
 
+class IngredientInline(admin.TabularInline):
+    model = IngredientInRecipe
+    extra = 2
+
+
 @admin.register(Ingredients)
 class IngredientsAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'measurement_unit')
@@ -15,6 +20,7 @@ class IngredientsAdmin(admin.ModelAdmin):
 class RecipesAdmin(admin.ModelAdmin):
     list_display = ('id', 'author', 'image', 'name', 'cooking_time')
     empty_value_display = '-пусто-',
+    inlines = (IngredientInline,)
 
 
 @admin.register(Tag)
@@ -37,5 +43,5 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
 @admin.register(IngredientInRecipe)
 class IngredientInRecipeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'recipe', 'ingredient','amount')
+    list_display = ('id', 'recipe', 'ingredients','amount')
     empty_value_display = '-пусто-'

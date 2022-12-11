@@ -4,9 +4,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, generics, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 
-from .serializer import TagSerializer, IngredientsSerializer, RecipesSerializer
+from .serializer import TagSerializer, IngredientsSerializer, RecipesSerializer, RecipeWriteSerializer
 from .models import Recipes, Tag, Ingredients, Favorite, ShoppingCart, IngredientInRecipe
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import mixins
@@ -26,6 +26,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     pagination_class = PageNumberPagination
     permission_classes = (AuthorStaffOrReadOnly,)
+
+
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return RecipesSerializer
+        return RecipeWriteSerializer
 
     def get_queryset(self):
         """Получает queryset в соответствии с параметрами запроса.

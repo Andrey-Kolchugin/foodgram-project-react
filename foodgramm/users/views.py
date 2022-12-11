@@ -15,6 +15,7 @@ from .serializers import UserSerializer, CustomUserSerializer, CustomUserCreateS
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateModelMixin
 from rest_framework.pagination import PageNumberPagination
 from djoser.views import UserViewSet
+from .paginators import PageLimitPagination
 
 
 User = get_user_model()
@@ -22,7 +23,7 @@ User = get_user_model()
 
 class UserListViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = PageLimitPagination
 
     def get_queryset(self):
         return User.objects.all()
@@ -41,7 +42,7 @@ class UserListViewSet(UserViewSet):
 
     @action(methods=('POST', 'DELETE'), detail=True)
     def subscribe(self, request, id):
-        # serializer = UserSerializer()
+
         user = self.request.user
         if user.is_anonymous:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -59,7 +60,9 @@ class UserListViewSet(UserViewSet):
                 }
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
             user.subscribe.add(following)
-            return Response(status=status.HTTP_201_CREATED)
+            self.request.user = following
+            serializer = UserSubscribeSerializer(context={'request': self.request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
             if not User.objects.filter(id=user.id, subscribe=following).exists():
@@ -87,26 +90,3 @@ class UserListViewSet(UserViewSet):
 #     #
 #     # def get_queryset(self):
 #     #     return User.objects.all()
-
-
-
-class BlacklistRefreshView(APIView):
-    permission_classes = (IsAuthenticated,)
-    def post(self, request):
-        token = request.headers.get('Authorization')
-        print(token)
-        # token.blacklist()
-        return Response(token, status=status.HTTP_204_NO_CONTENT)
-
-    # def post(self, obj):
-        # refresh_token = request.data["refresh_token"]
-
-            # token = RefreshToken(refresh_token)
-            # print(request.data)
-            # token.blacklist()
-
-            # return Response(status=status.HTTP_205_RESET_CONTENT)
-        # except Exception as e:
-        #     print('///')
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
-        # return Response(status=status.HTTP_200_OK)

@@ -11,6 +11,8 @@ from django.db.models import F
 User = get_user_model()
 
 
+
+
 class IngredientsSerializer(serializers.ModelSerializer):
     """
     Сериализатор для ингридиентов.
@@ -34,7 +36,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipesSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для рецептов.
+    Сериализатор для чтения рецептов.
     """
     tags = TagSerializer(many=True, read_only=True)
     author = CustomUserSerializer(read_only=True)
@@ -42,7 +44,7 @@ class RecipesSerializer(serializers.ModelSerializer):
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
     image = Base64ImageField()
-    ingredients = IngredientsSerializer(many=True, read_only=True)
+
 
     class Meta:
         model = Recipes
@@ -75,72 +77,128 @@ class RecipesSerializer(serializers.ModelSerializer):
             return False
         return ShoppingCart.objects.filter(user=user, recipes=obj).exists()
 
-    def validate(self, data):
-        """
-        Проверка вводных данных при создании/редактировании рецепта.
-        """
-        name = str(self.initial_data.get('name')).strip()
-        tags = self.initial_data.get('tags')
-        ingredients = self.initial_data.get('ingredients')
-        values_as_list = (tags, ingredients)
+    # def validate(self, data):
+    #     """
+    #     Проверка вводных данных при создании/редактировании рецепта.
+    #     """
+    #     name = str(self.initial_data.get('name')).strip()
+    #     tags = self.initial_data.get('tags')
+    #     ingredients = self.initial_data.get('ingredients')
+    #     values_as_list = (tags, ingredients)
+    #
+    #     for value in values_as_list:
+    #         if not isinstance(value, list):
+    #             raise ValidationError(
+    #                 f'"{value}" должен быть в формате "[]"'
+    #             )
+    #     data['name'] = name.capitalize()
+    #     data['tags'] = tags
+    #     data['author'] = self.context.get('request').user
+    #     return data
 
-        for value in values_as_list:
-            if not isinstance(value, list):
-                raise ValidationError(
-                    f'"{value}" должен быть в формате "[]"'
-                )
-        data['name'] = name.capitalize()
-        data['tags'] = tags
-        data['author'] = self.context.get('request').user
-        return data
+    # def create(self, validated_data):
+    #     """
+    #     Создание рецепта.
+    #     """
+    #
+    #     image = validated_data.pop('image')
+    #     tags = validated_data.pop('tags')
+    #     ingredients = validated_data.pop('ingredients')
+    #     recipe = Recipes.objects.create(image=image, **validated_data)
+    #     recipe.tags.set(tags)
+    # #     objs = [
+    # #         IngredientInRecipe(
+    # #             recipe=recipe,
+    # #             ingredient=ingredient['ingredient'],
+    # #             amount=ingredient['amount'],
+    # #         ) for ingredient in ingredients
+    # #     ]
+    # #     IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+    #     return recipe
+
+    # def update(self, recipe, validated_data):
+    #     """
+    #     Обновляет рецепт.
+    #     """
+    #     tags = validated_data.get('tags')
+    #     ingredients = validated_data.get('ingredients')
+    #     recipe.image = validated_data.get(
+    #         'image', recipe.image)
+    #     recipe.name = validated_data.get(
+    #         'name', recipe.name)
+    #     recipe.text = validated_data.get(
+    #         'text', recipe.text)
+    #     recipe.cooking_time = validated_data.get(
+    #         'cooking_time', recipe.cooking_time)
+    #
+    #     if tags:
+    #         recipe.tags.clear()
+    #         recipe.tags.set(tags)
+    #
+    #     if ingredients:
+    #         recipe.ingredients.clear()
+    #         objs = [
+    #         IngredientInRecipe(
+    #             recipe=recipe,
+    #             ingredients=ingredient['ingredient'],
+    #             amount=ingredient['amount'],
+    #             ) for ingredient in ingredients
+    #         ]
+    #         IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+    #     recipe.save()
+    #     return recipe
+
+class IngredientsWriteSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для ингридиентов.
+    """
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = ('ingredient', 'amount')
+
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    author = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+    ingredients = IngredientsWriteSerializer(many=True, read_only=True)
+    tags = serializers.ListField(
+        child=serializers.SlugRelatedField(
+            slug_field='id',
+            queryset=Tag.objects.all(),
+        ),
+    )
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipes
+        fields = (
+            'author', 'ingredients', 'tags', 'image', 'name', 'text', 'cooking_time',
+        )
 
     def create(self, validated_data):
         """
-        Создаёт рецепт.
+        Создание рецепта.
         """
+        print(validated_data.items())
         image = validated_data.pop('image')
-        tags = validated_data.pop('tags')
+        # tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         recipe = Recipes.objects.create(image=image, **validated_data)
-        recipe.tags.set(tags)
+        # recipe.tags.set(tags)
         objs = [
             IngredientInRecipe(
-        recipe=recipe,
-        ingredients=ingredient['ingredient'],
-        amount=ingredient['amount'],
+                recipe=recipe,
+                ingredient=ingredient['ingredient'],
+                amount=ingredient['amount'],
             ) for ingredient in ingredients
         ]
         IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
         return recipe
 
-    def update(self, recipe, validated_data):
-        """
-        Обновляет рецепт.
-        """
-        tags = validated_data.get('tags')
-        ingredients = validated_data.get('ingredients')
-        recipe.image = validated_data.get(
-            'image', recipe.image)
-        recipe.name = validated_data.get(
-            'name', recipe.name)
-        recipe.text = validated_data.get(
-            'text', recipe.text)
-        recipe.cooking_time = validated_data.get(
-            'cooking_time', recipe.cooking_time)
-
-        if tags:
-            recipe.tags.clear()
-            recipe.tags.set(tags)
-
-        if ingredients:
-            recipe.ingredients.clear()
-            objs = [
-            IngredientInRecipe(
-                recipe=recipe,
-                ingredients=ingredient['ingredient'],
-                amount=ingredient['amount'],
-                ) for ingredient in ingredients
-            ]
-            IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
-        recipe.save()
-        return recipe
+    def update(self, instance, validated_data):
+        instance.ingredients.clear()
+        instance.tags.clear()
+        instance = self.add_ingredients_and_tags(instance, validated_data)
+        return super().update(instance, validated_data)

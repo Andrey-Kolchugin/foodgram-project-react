@@ -19,20 +19,22 @@ class Ingredients(models.Model):
 
 
 class Tag(models.Model):
-    id = models.AutoField(primary_key=True)
     name = models.CharField(
         max_length=200,
         unique=True,
         verbose_name='Название тега'
     )
-    color = models.ImageField(
-        verbose_name='Картинка',
+    color = models.CharField(
+        verbose_name='Цветовой HEX-код',
+        max_length=6,
+        blank=True,
         null=True,
-        blank=True
+        default='FF'
     )
-    slug = models.SlugField(
+    slug = models.CharField(
         unique=True,
-        verbose_name='Слаг тега'
+        verbose_name='Слаг тега',
+        max_length=50
     )
 
     class Meta:
@@ -52,20 +54,21 @@ class Recipes(models.Model):
         verbose_name='Автор'
     )
     ingredients = models.ManyToManyField(
-        Ingredients,
+        to=Ingredients,
         blank=False,
         related_name='ingredients',
-        verbose_name='Ингредиенты'
+        verbose_name='Ингредиенты',
+        through='recipes.IngredientInRecipe',
     )
     tags = models.ManyToManyField(
         Tag,
         blank=True,
-        related_name='tags',
+        related_name='recipes',
         verbose_name='Тег'
     )
-    image = models.TextField(
-        blank=False,
-        verbose_name='Picture'
+    image = models.ImageField(
+        verbose_name='Изображение блюда',
+        upload_to='recipe_images/'
     )
     name = models.CharField(
         max_length=200,
@@ -78,10 +81,20 @@ class Recipes(models.Model):
                     MaxValueValidator(60, 'Число должно быть от 1 до 60!')],
         blank=False
     )
+    text = models.TextField(
+        verbose_name='Описание блюда',
+        max_length=500,
+    )
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True,
+    )
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ('-pub_date',)
+        unique_together = ['author', 'name']
 
 
 class Favorite(models.Model):
@@ -136,7 +149,7 @@ class IngredientInRecipe(models.Model):
         related_name='ingredient',
         on_delete=models.CASCADE,
     )
-    ingredient = models.ForeignKey(
+    ingredients = models.ForeignKey(
         Ingredients,
         verbose_name='Ингредиенты в этом рецепте',
         related_name='recipe',
@@ -159,7 +172,7 @@ class IngredientInRecipe(models.Model):
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в репепте'
         ordering = 'pk',
-        unique_together = ['recipe', 'ingredient']
+        unique_together = ['recipe', 'ingredients']
 
     def __str__(self):
         return f'{self.amount} {self.ingredients}'

@@ -12,7 +12,7 @@ from recipes.models import Recipes
 User = get_user_model()
 
 
-class ShortRecipeSerializer(ModelSerializer):
+class ShortRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Recipe.
     Определён укороченный набор полей для некоторых эндпоинтов.
     """
@@ -25,6 +25,7 @@ class ShortRecipeSerializer(ModelSerializer):
 class CustomUserSerializer(UserSerializer):
     """Сериализатор для просмотра юзеров."""
     is_subscribed = SerializerMethodField()
+
 
     class Meta:
         model = User
@@ -45,13 +46,13 @@ class CustomUserSerializer(UserSerializer):
         return user.subscribe.filter(id=obj.id).exists()
 
 
-
-
 class UserSubscribeSerializer(CustomUserSerializer):
-    """Сериализатор вывода авторов на которых подписан текущий пользователь.
     """
-    recipes = ShortRecipeSerializer(many=True, read_only=True)
-    # recipes_count = SerializerMethodField()
+    Сериализатор вывода авторов, на которых подписан текущий пользователь.
+    """
+
+    # recipes = ShortRecipeSerializer(many=True, read_only=True)
+    recipes_count = SerializerMethodField()
 
     class Meta:
         model = User
@@ -62,16 +63,16 @@ class UserSubscribeSerializer(CustomUserSerializer):
             'first_name',
             'last_name',
             'is_subscribed',
-            'recipes',
-            # 'recipes_count',
+            # 'recipes',
+            'recipes_count',
         )
         read_only_fields = '__all__',
 
     def get_is_subscribed(*args):
         return True
 
-    # def get_recipes_count(self, obj):
-    #     return obj.recipes.count()
+    def get_recipes_count(self, obj):
+        return Recipes.objects.filter(author=obj).count()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):

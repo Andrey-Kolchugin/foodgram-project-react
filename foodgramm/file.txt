@@ -1,0 +1,1 @@
+{'author': <User: admin@yandex.ru>, 'image': <SimpleUploadedFile: 93c59a87-7c81-4066-a05d-d025caefaed0.png (image/png)>, 'name': 'string', 'text': 'string', 'cooking_time': 1}
