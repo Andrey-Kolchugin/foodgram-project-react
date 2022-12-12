@@ -13,6 +13,7 @@ from rest_framework import mixins
 from rest_framework.response import Response
 from django.db.models import Sum, F
 from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly
+from users.serializers import ShortRecipeSerializer
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -110,7 +111,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
             favorite = Favorite(user=self.request.user, recipes=recipes)
             favorite.save()
-            return Response(status=status.HTTP_201_CREATED)
+            serializer = ShortRecipeSerializer(recipes, read_only=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
             if not Favorite.objects.filter(

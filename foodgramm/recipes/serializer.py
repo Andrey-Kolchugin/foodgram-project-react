@@ -106,14 +106,14 @@ class RecipesSerializer(serializers.ModelSerializer):
     #     ingredients = validated_data.pop('ingredients')
     #     recipe = Recipes.objects.create(image=image, **validated_data)
     #     recipe.tags.set(tags)
-    # #     objs = [
-    # #         IngredientInRecipe(
-    # #             recipe=recipe,
-    # #             ingredient=ingredient['ingredient'],
-    # #             amount=ingredient['amount'],
-    # #         ) for ingredient in ingredients
-    # #     ]
-    # #     IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+    #     objs = [
+    #         IngredientInRecipe(
+    #             recipe=recipe,
+    #             ingredient=ingredient['ingredient'],
+    #             amount=ingredient['amount'],
+    #         ) for ingredient in ingredients
+    #     ]
+    #     IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
     #     return recipe
 
     # def update(self, recipe, validated_data):
@@ -157,12 +157,26 @@ class IngredientsWriteSerializer(serializers.ModelSerializer):
         model = IngredientInRecipe
         fields = ('ingredient', 'amount')
 
+class IngredientRecipeSerializer(serializers.ModelSerializer):
+    """Serializer displays ingredients and recipe relation."""
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredients.objects.all()
+    )
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
+
+    class Meta:
+        model = IngredientInRecipe
+        fields = ('id', 'name', 'measurement_unit', 'amount',)
+
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
-    ingredients = IngredientsSerializer()
+    ingredients = IngredientRecipeSerializer(many=True)
     tags = serializers.ListField(
         child=serializers.SlugRelatedField(
             slug_field='id',
@@ -181,17 +195,19 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         """
         Создание рецепта.
         """
-        print(validated_data.items())
+
         image = validated_data.pop('image')
-        # tags = validated_data.pop('tags')
+        tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
+
         recipe = Recipes.objects.create(image=image, **validated_data)
-        # recipe.tags.set(tags)
+        recipe.tags.set(tags)
         objs = [
             IngredientInRecipe(
+                print(ingredient),
                 recipe=recipe,
-                ingredient=ingredient['ingredient'],
-                amount=ingredient['amount'],
+                ingredients=ingredient.pop('id'),
+                amount=ingredient.pop('amount'),
             ) for ingredient in ingredients
         ]
         IngredientInRecipe.objects.bulk_create(objs, batch_size=100)

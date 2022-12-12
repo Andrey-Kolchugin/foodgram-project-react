@@ -51,7 +51,7 @@ class UserSubscribeSerializer(CustomUserSerializer):
     Сериализатор вывода авторов, на которых подписан текущий пользователь.
     """
 
-    # recipes = ShortRecipeSerializer(many=True, read_only=True)
+    recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
 
     class Meta:
@@ -63,7 +63,7 @@ class UserSubscribeSerializer(CustomUserSerializer):
             'first_name',
             'last_name',
             'is_subscribed',
-            # 'recipes',
+            'recipes',
             'recipes_count',
         )
         read_only_fields = '__all__',
@@ -73,6 +73,11 @@ class UserSubscribeSerializer(CustomUserSerializer):
 
     def get_recipes_count(self, obj):
         return Recipes.objects.filter(author=obj).count()
+
+    def get_recipes(self, obj):
+        recipe = Recipes.objects.filter(author=obj)
+        serializer = ShortRecipeSerializer(recipe, many=True, read_only=True)
+        return serializer.data
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
