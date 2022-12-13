@@ -204,17 +204,21 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         recipe.tags.set(tags)
         objs = [
             IngredientInRecipe(
-                print(ingredient),
+                print(),
                 recipe=recipe,
-                ingredients=ingredient.pop('id'),
-                amount=ingredient.pop('amount'),
+                ingredients=ingredient['id'],
+                amount=ingredient['amount'],
             ) for ingredient in ingredients
         ]
         IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
         return recipe
 
-    def update(self, instance, validated_data):
-        instance.ingredients.clear()
-        instance.tags.clear()
-        instance = self.add_ingredients_and_tags(instance, validated_data)
-        return super().update(instance, validated_data)
+    def to_representation(self, recipe):
+        """Serializer result presentation method."""
+        return RecipesSerializer(recipe, context=self.context).data
+
+    # def update(self, instance, validated_data):
+    #     instance.ingredients.clear()
+    #     instance.tags.clear()
+    #     instance = self.add_ingredients_and_tags(instance, validated_data)
+    #     return super().update(instance, validated_data)
