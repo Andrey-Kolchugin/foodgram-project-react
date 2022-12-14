@@ -1,20 +1,17 @@
 from django.contrib.auth import get_user_model
+from djoser.serializers import UserCreateSerializer, UserSerializer
+
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
-from rest_framework.serializers import ModelSerializer
-from rest_framework.validators import UniqueValidator
-from djoser.serializers import UserSerializer, UserCreateSerializer
 
 from recipes.models import Recipes
-
-
 
 User = get_user_model()
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Recipe.
-    Определён укороченный набор полей для некоторых эндпоинтов.
+    """Сериализатор для модели Recipe
+    с укороченными полями.
     """
     class Meta:
         model = Recipes
@@ -23,9 +20,10 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
-    """Сериализатор для просмотра юзеров."""
+    """
+    Сериализатор для просмотра юзеров.
+    """
     is_subscribed = SerializerMethodField()
-
 
     class Meta:
         model = User
@@ -69,23 +67,42 @@ class UserSubscribeSerializer(CustomUserSerializer):
         read_only_fields = '__all__',
 
     def get_is_subscribed(*args):
+        """
+        Метод всегда возвращает True
+        для экономии подходов в базу
+        """
         return True
 
     def get_recipes_count(self, obj):
+        """
+        Метод возвращает количество рецептов
+        """
         return Recipes.objects.filter(author=obj).count()
 
     def get_recipes(self, obj):
+        """
+        Метод определяет и возвращает короткий вариант рецептов
+        """
         recipe = Recipes.objects.filter(author=obj)
         serializer = ShortRecipeSerializer(recipe, many=True, read_only=True)
         return serializer.data
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
-    """Сериализатор для простмотра юзеров."""
+    """
+    Сериализатор для простмотра юзеров.
+    """
 
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password')
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'password'
+        )
         extra_kwargs = {
             'password': {'write_only': True}
         }

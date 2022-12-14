@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
-
-from .models import Tag, Ingredients, Recipes, Favorite, ShoppingCart, IngredientInRecipe
-from drf_extra_fields.fields import Base64ImageField
-from users.serializers import CustomUserSerializer
 from django.db.models import F
+from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import SerializerMethodField
+from users.serializers import CustomUserSerializer
 
+from .models import (Favorite, IngredientInRecipe, Ingredients, Recipes,
+                     ShoppingCart, Tag)
 
 User = get_user_model()
 
@@ -42,7 +43,6 @@ class RecipesSerializer(serializers.ModelSerializer):
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
     image = Base64ImageField()
-
 
     class Meta:
         model = Recipes
@@ -104,8 +104,11 @@ class IngredientsWriteSerializer(serializers.ModelSerializer):
         model = IngredientInRecipe
         fields = ('ingredient', 'amount')
 
+
 class IngredientRecipeSerializer(serializers.ModelSerializer):
-    """Serializer displays ingredients and recipe relation."""
+    """
+    Сериализатор для ингр-ов и их кол-ва в каждом рецепте.
+    """
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredients.objects.all()
     )
@@ -120,6 +123,9 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания и обновления рецептов
+    """
     author = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
@@ -135,49 +141,53 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipes
         fields = (
-            'author', 'ingredients', 'tags', 'image', 'name', 'text', 'cooking_time',
+            'author',
+            'ingredients',
+            'tags',
+            'image',
+            'name',
+            'text',
+            'cooking_time',
         )
 
-    def create(self, validated_data):
-        """
-        Создание рецепта.
-        """
-
-        image = validated_data.pop('image')
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-
-        recipe = Recipes.objects.create(image=image, **validated_data)
-        recipe.tags.set(tags)
+    @staticmethod
+    def create_ingredients(ingredients, recipe):
         objs = [
             IngredientInRecipe(
-                print(),
                 recipe=recipe,
                 ingredients=ingredient['id'],
                 amount=ingredient['amount'],
             ) for ingredient in ingredients
         ]
         IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+
+    def create(self, validated_data):
+        """
+        Метод создание рецепта.
+        """
+        image = validated_data.pop('image')
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        recipe = Recipes.objects.create(image=image, **validated_data)
+        recipe.tags.set(tags)
+        self.create_ingredients(ingredients, recipe)
         return recipe
 
     def to_representation(self, recipe):
-        """Serializer result presentation method."""
+        """
+        Сериализатор возвращает результат работы методов.
+        """
         return RecipesSerializer(recipe, context=self.context).data
 
     def update(self, instance, validated_data):
+        """
+        Метод обновления рецетов
+        """
         instance.ingredients.clear()
         instance.tags.clear()
         IngredientInRecipe.objects.filter(recipe=instance).delete()
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         instance.tags.set(tags)
-        objs = [
-            IngredientInRecipe(
-                print(),
-                recipe=instance,
-                ingredients=ingredient['id'],
-                amount=ingredient['amount'],
-            ) for ingredient in ingredients
-        ]
-        IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+        self.create_ingredients(ingredients, recipe=instance)
         return super().update(instance, validated_data)

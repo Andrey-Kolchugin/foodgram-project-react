@@ -1,15 +1,26 @@
 from django.contrib.auth import get_user_model
-from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-
+from django.db import models
 
 User = get_user_model()
 
 
 class Ingredients(models.Model):
-    id = models.AutoField(primary_key=True, editable=False)
-    name = models.CharField(max_length=200, verbose_name='Ингредиент')
-    measurement_unit = models.CharField(max_length=200, verbose_name='Единица измерения')
+    """
+    Модель ингредиентов
+    """
+    id = models.AutoField(
+        primary_key=True,
+        editable=False
+    )
+    name = models.CharField(
+        max_length=200,
+        verbose_name='Ингредиент'
+    )
+    measurement_unit = models.CharField(
+        max_length=30,
+        verbose_name='Единица измерения'
+    )
 
     class Meta:
         ordering = ['id']
@@ -18,6 +29,9 @@ class Ingredients(models.Model):
 
 
 class Tag(models.Model):
+    """
+    Модель тегов
+    """
     name = models.CharField(
         max_length=200,
         unique=True,
@@ -28,7 +42,7 @@ class Tag(models.Model):
         max_length=7,
         blank=True,
         null=True,
-        default='FF'
+        default='#000000'
     )
     slug = models.CharField(
         unique=True,
@@ -43,7 +57,7 @@ class Tag(models.Model):
 
 class Recipes(models.Model):
     """
-    Класс работы с рецептами
+    Модель рецептов
     """
     author = models.ForeignKey(
         User,
@@ -53,7 +67,7 @@ class Recipes(models.Model):
         verbose_name='Автор'
     )
     ingredients = models.ManyToManyField(
-        to=Ingredients,
+        Ingredients,
         blank=False,
         related_name='ingredients',
         verbose_name='Ингредиенты',
@@ -97,6 +111,9 @@ class Recipes(models.Model):
 
 
 class Favorite(models.Model):
+    """
+    Модель категории избранных рецептов
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -118,6 +135,9 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
+    """
+    Модель корзины покупок
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -140,7 +160,7 @@ class ShoppingCart(models.Model):
 
 class IngredientInRecipe(models.Model):
     """
-    Ингредиенты в каждом рецепте.
+    Модель ингредиентов и их кол-ва в каждом рецепте.
     """
     recipe = models.ForeignKey(
         Recipes,
@@ -172,6 +192,3 @@ class IngredientInRecipe(models.Model):
         verbose_name_plural = 'Ингредиенты в репепте'
         ordering = 'pk',
         unique_together = ['recipe', 'ingredients']
-
-    def __str__(self):
-        return f'{self.amount} {self.ingredients}'

@@ -4,7 +4,7 @@ from rest_framework.permissions import (BasePermission,
 
 class AuthorStaffOrReadOnly(IsAuthenticatedOrReadOnly):
     """
-    Разрешение на изменение только для служебного персонала и автора.
+    Класс разрешений для служебного персонала и автора.
     Остальным только чтение объекта.
     """
     def has_object_permission(self, request, view, obj):
@@ -17,8 +17,8 @@ class AuthorStaffOrReadOnly(IsAuthenticatedOrReadOnly):
 
 class AdminOrReadOnly(BasePermission):
     """
-    Разрешение на создание и изменение только для админов.
-    Остальным только чтение объекта.
+    Класс разрешений на создание и изменение только для админов.
+    Остальным только чтение.
     """
     def has_permission(self, request, view):
         return (
@@ -30,7 +30,7 @@ class AdminOrReadOnly(BasePermission):
 
 class OwnerUserOrReadOnly(IsAuthenticatedOrReadOnly):
     """
-    Разрешение на изменение только для админа и пользователя.
+    Класс разрешений на изменение только для админа и пользователя.
     Остальным только чтение объекта.
     """
     def has_object_permission(self, request, view, obj):

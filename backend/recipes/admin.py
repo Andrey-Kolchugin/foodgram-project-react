@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from .models import Ingredients, Recipes, Tag, Favorite, ShoppingCart, IngredientInRecipe
+
+from .models import (Favorite, IngredientInRecipe, Ingredients, Recipes,
+                     ShoppingCart, Tag)
 
 User = get_user_model()
 
@@ -43,5 +45,5 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
 @admin.register(IngredientInRecipe)
 class IngredientInRecipeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'recipe', 'ingredients','amount')
+    list_display = ('id', 'recipe', 'ingredients', 'amount')
     empty_value_display = '-пусто-'
