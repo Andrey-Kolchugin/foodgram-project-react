@@ -11,8 +11,6 @@ from django.db.models import F
 User = get_user_model()
 
 
-
-
 class IngredientsSerializer(serializers.ModelSerializer):
     """
     Сериализатор для ингридиентов.
@@ -77,76 +75,25 @@ class RecipesSerializer(serializers.ModelSerializer):
             return False
         return ShoppingCart.objects.filter(user=user, recipes=obj).exists()
 
-    # def validate(self, data):
-    #     """
-    #     Проверка вводных данных при создании/редактировании рецепта.
-    #     """
-    #     name = str(self.initial_data.get('name')).strip()
-    #     tags = self.initial_data.get('tags')
-    #     ingredients = self.initial_data.get('ingredients')
-    #     values_as_list = (tags, ingredients)
-    #
-    #     for value in values_as_list:
-    #         if not isinstance(value, list):
-    #             raise ValidationError(
-    #                 f'"{value}" должен быть в формате "[]"'
-    #             )
-    #     data['name'] = name.capitalize()
-    #     data['tags'] = tags
-    #     data['author'] = self.context.get('request').user
-    #     return data
+    def validate(self, data):
+        """
+        Проверка вводных данных при создании/редактировании рецепта.
+        """
+        name = str(self.initial_data.get('name')).strip()
+        tags = self.initial_data.get('tags')
+        ingredients = self.initial_data.get('ingredients')
+        values_as_list = (tags, ingredients)
 
-    # def create(self, validated_data):
-    #     """
-    #     Создание рецепта.
-    #     """
-    #
-    #     image = validated_data.pop('image')
-    #     tags = validated_data.pop('tags')
-    #     ingredients = validated_data.pop('ingredients')
-    #     recipe = Recipes.objects.create(image=image, **validated_data)
-    #     recipe.tags.set(tags)
-    #     objs = [
-    #         IngredientInRecipe(
-    #             recipe=recipe,
-    #             ingredient=ingredient['ingredient'],
-    #             amount=ingredient['amount'],
-    #         ) for ingredient in ingredients
-    #     ]
-    #     IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
-    #     return recipe
+        for value in values_as_list:
+            if not isinstance(value, list):
+                raise ValidationError(
+                    f'"{value}" должен быть в формате "[]"'
+                )
+        data['name'] = name.capitalize()
+        data['tags'] = tags
+        data['author'] = self.context.get('request').user
+        return data
 
-    # def update(self, recipe, validated_data):
-    #     """
-    #     Обновляет рецепт.
-    #     """
-    #     tags = validated_data.get('tags')
-    #     ingredients = validated_data.get('ingredients')
-    #     recipe.image = validated_data.get(
-    #         'image', recipe.image)
-    #     recipe.name = validated_data.get(
-    #         'name', recipe.name)
-    #     recipe.text = validated_data.get(
-    #         'text', recipe.text)
-    #     recipe.cooking_time = validated_data.get(
-    #         'cooking_time', recipe.cooking_time)
-    #
-    #     if tags:
-    #         recipe.tags.clear()
-    #         recipe.tags.set(tags)
-    #
-    #     if ingredients:
-    #         recipe.ingredients.clear()
-    #         objs = [
-    #         IngredientInRecipe(
-    #             recipe=recipe,
-    #             ingredients=ingredient['ingredient'],
-    #             amount=ingredient['amount'],
-    #             ) for ingredient in ingredients
-    #         ]
-    #         IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
-    #     recipe.save()
-    #     return recipe
 
 class IngredientsWriteSerializer(serializers.ModelSerializer):
     """
@@ -217,8 +164,20 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         """Serializer result presentation method."""
         return RecipesSerializer(recipe, context=self.context).data
 
-    # def update(self, instance, validated_data):
-    #     instance.ingredients.clear()
-    #     instance.tags.clear()
-    #     instance = self.add_ingredients_and_tags(instance, validated_data)
-    #     return super().update(instance, validated_data)
+    def update(self, instance, validated_data):
+        instance.ingredients.clear()
+        instance.tags.clear()
+        IngredientInRecipe.objects.filter(recipe=instance).delete()
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        instance.tags.set(tags)
+        objs = [
+            IngredientInRecipe(
+                print(),
+                recipe=instance,
+                ingredients=ingredient['id'],
+                amount=ingredient['amount'],
+            ) for ingredient in ingredients
+        ]
+        IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+        return super().update(instance, validated_data)

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
     # 'rest_framework_simplejwt.token_blacklist',
     'djoser',
 ]

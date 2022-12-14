@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, generics, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .serializer import TagSerializer, IngredientsSerializer, RecipesSerializer, RecipeWriteSerializer
 from .models import Recipes, Tag, Ingredients, Favorite, ShoppingCart, IngredientInRecipe
@@ -14,12 +15,15 @@ from rest_framework.response import Response
 from django.db.models import Sum, F
 from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly
 from users.serializers import ShortRecipeSerializer
+from .filters import IngredientFilter
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
     queryset = Ingredients.objects.all()
     permission_classes = (AdminOrReadOnly,)
+    filter_backends = [IngredientFilter, ]
+    search_fields = ['^name', ]
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
@@ -42,9 +46,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         tags = self.request.query_params.getlist('tags')
+
         if tags:
             queryset = queryset.filter(
                 tags__slug__in=tags).distinct()
+
 
         author = self.request.query_params.get('author')
         if author:
@@ -72,6 +78,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @action(detail=False)
     def download_shopping_cart(self, request):
         user = self.request.user
+        if user.is_anonymous:
+            Response(status=status.HTTP_401_UNAUTHORIZED)
         query = ShoppingCart.objects.filter(user=user)
         if not query.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -140,7 +148,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
             shopping_cart = ShoppingCart(user=self.request.user, recipes=recipes)
             shopping_cart.save()
-            return Response(status=status.HTTP_201_CREATED)
+            serializer = ShortRecipeSerializer(recipes, read_only=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
             if not ShoppingCart.objects.filter(
                     user=self.request.user, recipes=recipes

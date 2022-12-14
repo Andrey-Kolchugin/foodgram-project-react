@@ -1,4 +1,3 @@
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -26,7 +25,7 @@ class Tag(models.Model):
     )
     color = models.CharField(
         verbose_name='Цветовой HEX-код',
-        max_length=6,
+        max_length=7,
         blank=True,
         null=True,
         default='FF'
