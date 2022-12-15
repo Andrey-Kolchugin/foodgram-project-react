@@ -16,7 +16,7 @@ from . import conf
 from .filters import IngredientFilter
 from .paginators import PageLimitPagination
 from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly
-from .ervice import add_or_delete_obj, get_shopping_cart_txt
+from .service import add_or_delete_obj, get_shopping_cart_txt
 
 User = get_user_model()
 
