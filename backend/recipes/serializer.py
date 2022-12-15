@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import F
+from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -30,7 +31,7 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
-        read_only_fields = ['__all__']
+        read_only_fields = '__all__',
 
 
 class RecipesSerializer(serializers.ModelSerializer):
@@ -159,8 +160,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 amount=ingredient['amount'],
             ) for ingredient in ingredients
         ]
-        IngredientInRecipe.objects.bulk_create(objs, batch_size=100)
+        IngredientInRecipe.objects.bulk_create(objs)
 
+    @transaction.atomic
     def create(self, validated_data):
         """
         Метод создание рецепта.
@@ -179,6 +181,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         """
         return RecipesSerializer(recipe, context=self.context).data
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         """
         Метод обновления рецетов

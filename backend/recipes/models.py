@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from colorfield.fields import ColorField
 
 User = get_user_model()
 
@@ -37,12 +38,12 @@ class Tag(models.Model):
         unique=True,
         verbose_name='Название тега'
     )
-    color = models.CharField(
+    color = ColorField(
         verbose_name='Цветовой HEX-код',
         max_length=7,
         blank=True,
         null=True,
-        default='#000000'
+        default='#FF0000'
     )
     slug = models.CharField(
         unique=True,
@@ -91,7 +92,7 @@ class Recipes(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1, 'Число должно быть от 1 до 60!'),
-                    MaxValueValidator(60, 'Число должно быть от 1 до 60!')],
+                    MaxValueValidator(999, 'Число должно быть от 1 до 999!')],
         blank=False
     )
     text = models.TextField(
@@ -107,7 +108,11 @@ class Recipes(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-pub_date',)
-        unique_together = ['author', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'name'], name="unique_recipe"
+            )
+        ]
 
 
 class Favorite(models.Model):
@@ -130,8 +135,12 @@ class Favorite(models.Model):
     )
 
     class Meta:
-        unique_together = ['user', 'recipes']
         verbose_name = 'Избранное'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipes'], name="unique_following"
+            )
+        ]
 
 
 class ShoppingCart(models.Model):
@@ -142,20 +151,24 @@ class ShoppingCart(models.Model):
         User,
         on_delete=models.CASCADE,
         blank=True,
-        related_name='shoppin_cart_user',
+        related_name='shopping_cart',
         verbose_name='Юзер',
     )
     recipes = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
         blank=True,
-        related_name='shoppin_cart_recipes',
+        related_name='shopping_cart',
         verbose_name='Рецепт',
     )
 
     class Meta:
-        unique_together = ['user', 'recipes']
         verbose_name = 'Корзина'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipes'], name="unique_shopping_cart"
+            )
+        ]
 
 
 class IngredientInRecipe(models.Model):
@@ -191,4 +204,8 @@ class IngredientInRecipe(models.Model):
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в репепте'
         ordering = 'pk',
-        unique_together = ['recipe', 'ingredients']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredients'], name="unique_ing_in_rec"
+            )
+        ]

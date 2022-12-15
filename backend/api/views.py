@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import Favorite, Ingredients, Recipes, ShoppingCart, Tag
 from recipes.serializer import (IngredientsSerializer, RecipesSerializer,
@@ -7,15 +8,16 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticatedOrReadOnly, \
+    AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.serializers import (CustomUserSerializer, ShortRecipeSerializer,
                                UserSubscribeSerializer)
 
 from . import conf
-from .filters import IngredientFilter
+from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageLimitPagination
-from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly
+from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly, Testp
 from .service import add_or_delete_obj, get_shopping_cart_txt
 
 User = get_user_model()
@@ -24,6 +26,7 @@ User = get_user_model()
 class UserListViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     pagination_class = PageLimitPagination
+    permission_classes = IsAuthenticated,
 
     def get_queryset(self):
         return User.objects.all()
@@ -79,16 +82,18 @@ class UserListViewSet(UserViewSet):
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
     queryset = Ingredients.objects.all()
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (AllowAny,)
     filter_backends = [IngredientFilter, ]
     search_fields = ['^name', ]
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
     serializer_class = RecipesSerializer
-    queryset = Recipes.objects.all()
     pagination_class = PageLimitPagination
-    permission_classes = (AuthorStaffOrReadOnly, IsAuthenticatedOrReadOnly)
+    permission_classes = (Testp,)
+    filterset_class = RecipeFilter
+    filter_backends = (DjangoFilterBackend,)
+    queryset = Recipes.objects.all()
 
     def get_serializer_class(self):
         """
@@ -99,44 +104,44 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return RecipesSerializer
         return RecipeWriteSerializer
 
-    def get_queryset(self):
-        """
-        Получает queryset в соответствии с параметрами запроса.
-        """
-        queryset = self.queryset
-
-        tags = self.request.query_params.getlist(conf.TAGS)
-
-        if tags:
-            queryset = queryset.filter(
-                tags__slug__in=tags).distinct()
-
-        author = self.request.query_params.get(conf.AUTHOR)
-        if author:
-            queryset = queryset.filter(author=author)
-        user = self.request.user
-        if user.is_anonymous:
-            return queryset
-
-        is_in_shopping = self.request.query_params.get(conf.SHOP_CART)
-        if is_in_shopping in conf.SYMBOL_TRUE:
-            queryset = queryset.filter(
-                id__in=ShoppingCart.objects.filter(user=user).values('recipes')
-            )
-        elif is_in_shopping in conf.SYMBOL_FALSE:
-            queryset = queryset.exclude(
-                id__in=ShoppingCart.objects.filter(user=user).values('recipes')
-            )
-
-        is_favorited = self.request.query_params.get(conf.FAVORITE)
-        if is_favorited in conf.SYMBOL_TRUE:
-            queryset = queryset.filter(
-                id__in=Favorite.objects.filter(user=user).values('recipes')
-            )
-        if is_favorited in conf.SYMBOL_FALSE:
-            queryset = queryset.exclude(
-                id__in=Favorite.objects.filter(user=user).values('recipes')
-            )
+    # def get_queryset(self):
+    #     """
+    #     Получает queryset в соответствии с параметрами запроса.
+    #     """
+    #     queryset = self.queryset
+    #
+    #     tags = self.request.query_params.getlist(conf.TAGS)
+    #
+    #     if tags:
+    #         queryset = queryset.filter(
+    #             tags__slug__in=tags).distinct()
+        #
+        # author = self.request.query_params.get(conf.AUTHOR)
+        # if author:
+        #     queryset = queryset.filter(author=author)
+        # user = self.request.user
+        # if user.is_anonymous:
+        #     return queryset
+        #
+        # is_in_shopping = self.request.query_params.get(conf.SHOP_CART)
+        # if is_in_shopping in conf.SYMBOL_TRUE:
+        #     queryset = queryset.filter(
+        #         id__in=ShoppingCart.objects.filter(user=user).values('recipes')
+        #     )
+        # elif is_in_shopping in conf.SYMBOL_FALSE:
+        #     queryset = queryset.exclude(
+        #         id__in=ShoppingCart.objects.filter(user=user).values('recipes')
+        #     )
+        #
+        # is_favorited = self.request.query_params.get(conf.FAVORITE)
+        # if is_favorited in conf.SYMBOL_TRUE:
+        #     queryset = queryset.filter(
+        #         id__in=Favorite.objects.filter(user=user).values('recipes')
+        #     )
+        # if is_favorited in conf.SYMBOL_FALSE:
+        #     queryset = queryset.exclude(
+        #         id__in=Favorite.objects.filter(user=user).values('recipes')
+        #     )
 
         return queryset
 
@@ -171,12 +176,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
         if request.method == 'DELETE':
-            add_or_delete_obj(
+            return add_or_delete_obj(
                 user=user,
                 recipes=recipes,
                 action=conf.METHOD_DEL,
-                model=Favorite),
-            return Response(status=status.HTTP_204_NO_CONTENT)
+                model=Favorite)
+
 
     @action(methods=('POST', 'DELETE'), detail=True)
     def shopping_cart(self, request, pk):
@@ -205,4 +210,4 @@ class RecipesViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
-    permission_classes = (AdminOrReadOnly,)
+    permission_classes = (AllowAny,)

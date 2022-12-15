@@ -38,8 +38,11 @@ class CustomUserSerializer(UserSerializer):
         read_only_fields = 'is_subscribed',
 
     def get_is_subscribed(self, obj):
+        """
+        Метод проверки подписан ли юзер на автора рецепта
+        """
         user = self.context.get('request').user
-        if user.is_anonymous or (user == obj):
+        if user.is_anonymous or user == obj:
             return False
         return user.subscribe.filter(id=obj.id).exists()
 
@@ -66,12 +69,16 @@ class UserSubscribeSerializer(CustomUserSerializer):
         )
         read_only_fields = '__all__',
 
-    def get_is_subscribed(*args):
+    def get_is_subscribed(self, obj):
         """
-        Метод всегда возвращает True
-        для экономии подходов в базу
+        Метод проверки подписан ли юзер на автора рецепта
         """
-        return True
+        user = self.context.get('request').user
+
+        if user.is_anonymous or (user == obj):
+            return False
+
+        return user.subscribe.filter(id=obj.id).exists()
 
     def get_recipes_count(self, obj):
         """

@@ -22,17 +22,18 @@ def get_shopping_cart_txt(query, user):
         measure=F('ingredients__measurement_unit')
     ).annotate(amount=Sum('amount'))
     filename = f'{user.username}_shopping_cart.txt'
-    shopping_list = (
+    description = (
         f'Список покупок для:\n\n{user.username}\n\n'
         f'от {datetime.now()}\n\n'
     )
-    for ing in ingredients:
-        shopping_list += (
+    shp_list = [
+        (
             f'{ing["ingredient"]}: {ing["amount"]} {ing["measure"]}\n'
-        )
-
+        ) for ing in ingredients
+    ]
     response = HttpResponse(
-        shopping_list, content_type='text.txt; charset=utf-8'
+        (description + ",".join(shp_list)),
+        content_type='text.txt; charset=utf-8'
     )
     response['Content-Disposition'] = f'attachment; filename={filename}'
     return response
@@ -63,4 +64,8 @@ def add_or_delete_obj(action, model, user, recipes):
             return Response(content, status=status.HTTP_400_BAD_REQUEST)
         model.objects.filter(
             user=user, recipes=recipes).delete()
-        return Response()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    content = {
+        "errors": "Метод не поддерживается!"
+    }
+    return Response(content, status=status.HTTP_400_BAD_REQUEST)
