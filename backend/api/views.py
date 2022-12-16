@@ -7,17 +7,15 @@ from recipes.serializer import (IngredientsSerializer, RecipesSerializer,
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticatedOrReadOnly, \
-    AllowAny, IsAuthenticated
+from rest_framework.permissions import (SAFE_METHODS, AllowAny,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from users.serializers import (CustomUserSerializer, ShortRecipeSerializer,
-                               UserSubscribeSerializer)
+from users.serializers import CustomUserSerializer, UserSubscribeSerializer
 
 from . import conf
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageLimitPagination
-from .permissions import AdminOrReadOnly, AuthorStaffOrReadOnly, Testp
+from .permissions import IsAuthorOrReadOnly
 from .service import add_or_delete_obj, get_shopping_cart_txt
 
 User = get_user_model()
@@ -26,8 +24,7 @@ User = get_user_model()
 class UserListViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     pagination_class = PageLimitPagination
-    permission_classes = IsAuthenticated,
-
+    permission_classes = IsAuthenticatedOrReadOnly,
     def get_queryset(self):
         return User.objects.all()
 
@@ -90,7 +87,7 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     serializer_class = RecipesSerializer
     pagination_class = PageLimitPagination
-    permission_classes = (Testp,)
+    permission_classes = (IsAuthorOrReadOnly,)
     filterset_class = RecipeFilter
     filter_backends = (DjangoFilterBackend,)
     queryset = Recipes.objects.all()
@@ -103,47 +100,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if self.request.method in SAFE_METHODS:
             return RecipesSerializer
         return RecipeWriteSerializer
-
-    # def get_queryset(self):
-    #     """
-    #     Получает queryset в соответствии с параметрами запроса.
-    #     """
-    #     queryset = self.queryset
-    #
-    #     tags = self.request.query_params.getlist(conf.TAGS)
-    #
-    #     if tags:
-    #         queryset = queryset.filter(
-    #             tags__slug__in=tags).distinct()
-        #
-        # author = self.request.query_params.get(conf.AUTHOR)
-        # if author:
-        #     queryset = queryset.filter(author=author)
-        # user = self.request.user
-        # if user.is_anonymous:
-        #     return queryset
-        #
-        # is_in_shopping = self.request.query_params.get(conf.SHOP_CART)
-        # if is_in_shopping in conf.SYMBOL_TRUE:
-        #     queryset = queryset.filter(
-        #         id__in=ShoppingCart.objects.filter(user=user).values('recipes')
-        #     )
-        # elif is_in_shopping in conf.SYMBOL_FALSE:
-        #     queryset = queryset.exclude(
-        #         id__in=ShoppingCart.objects.filter(user=user).values('recipes')
-        #     )
-        #
-        # is_favorited = self.request.query_params.get(conf.FAVORITE)
-        # if is_favorited in conf.SYMBOL_TRUE:
-        #     queryset = queryset.filter(
-        #         id__in=Favorite.objects.filter(user=user).values('recipes')
-        #     )
-        # if is_favorited in conf.SYMBOL_FALSE:
-        #     queryset = queryset.exclude(
-        #         id__in=Favorite.objects.filter(user=user).values('recipes')
-        #     )
-
-        return queryset
 
     @action(detail=False)
     def download_shopping_cart(self, request):
