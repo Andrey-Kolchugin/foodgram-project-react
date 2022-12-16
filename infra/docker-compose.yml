@@ -9,14 +9,14 @@ services:
       - .env
 
   frontend:
-    image: kdostova/foodgram_backend
+    image: vatr/foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
       - db
 
   backend:
-    image: kdostova/foodgram_frontend
+    image: vatr/foodgram_backend
     restart: always
     volumes:
       - static_value:/app/static/
