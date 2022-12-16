@@ -8,7 +8,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
-                                        IsAuthenticatedOrReadOnly)
+                                        IsAuthenticatedOrReadOnly, IsAuthenticated)
 from rest_framework.response import Response
 from users.serializers import CustomUserSerializer, UserSubscribeSerializer
 
@@ -24,7 +24,8 @@ User = get_user_model()
 class UserListViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     pagination_class = PageLimitPagination
-    permission_classes = IsAuthenticatedOrReadOnly,
+    permission_classes = IsAuthenticated,
+
     def get_queryset(self):
         return User.objects.all()
 
@@ -79,15 +80,15 @@ class UserListViewSet(UserViewSet):
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientsSerializer
     queryset = Ingredients.objects.all()
-    permission_classes = (AllowAny,)
-    filter_backends = [IngredientFilter, ]
-    search_fields = ['^name', ]
+    permission_classes = AllowAny,
+    filter_backends = IngredientFilter,
+    search_fields = '^name',
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
     serializer_class = RecipesSerializer
     pagination_class = PageLimitPagination
-    permission_classes = (IsAuthorOrReadOnly,)
+    permission_classes = IsAuthorOrReadOnly,
     filterset_class = RecipeFilter
     filter_backends = (DjangoFilterBackend,)
     queryset = Recipes.objects.all()
@@ -138,7 +139,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 action=conf.METHOD_DEL,
                 model=Favorite)
 
-
     @action(methods=('POST', 'DELETE'), detail=True)
     def shopping_cart(self, request, pk):
         """
@@ -166,4 +166,4 @@ class RecipesViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = AllowAny,
