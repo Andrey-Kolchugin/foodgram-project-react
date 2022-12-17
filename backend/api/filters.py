@@ -18,7 +18,9 @@ class IngredientFilter(SearchFilter):
 
 
 class RecipeFilter(FilterSet):
-    """Recipe search filter model."""
+    """
+    Фильтр по модели рецептов.
+    """
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     author = filters.ModelChoiceFilter(queryset=User.objects.all())
     is_favorited = filters.BooleanFilter(method='if_is_favorited')
@@ -31,13 +33,19 @@ class RecipeFilter(FilterSet):
         fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart',)
 
     def if_is_favorited(self, queryset, name, value):
-        """'is_favorited' parameter filter processing method."""
+        """
+        Фильтрация подписчиков.
+        """
         if value and self.request.user.is_authenticated:
-            return queryset.filter(id__in=Favorite.objects.filter(user=self.request.user).values('recipes'))
+            return queryset.filter(id__in=Favorite.objects.filter(
+                user=self.request.user).values('recipes'))
         return queryset
 
     def if_is_in_shopping_cart(self, queryset, name, value):
-        """'if_is_in_shopping_cart' parameter filter processing method."""
+        """
+        Фильтр по корзине покупок.
+        """
         if value and self.request.user.is_authenticated:
-            return queryset.filter(id__in=ShoppingCart.objects.filter(user=self.request.user).values('recipes'))
+            return queryset.filter(id__in=ShoppingCart.objects.filter(
+                user=self.request.user).values('recipes'))
         return

@@ -7,15 +7,16 @@ from recipes.serializer import (IngredientsSerializer, RecipesSerializer,
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import (SAFE_METHODS, AllowAny,
-                                        IsAuthenticatedOrReadOnly, IsAuthenticated)
+from rest_framework.permissions import (SAFE_METHODS,
+                                        AllowAny,
+                                        IsAuthenticated)
 from rest_framework.response import Response
 from users.serializers import CustomUserSerializer, UserSubscribeSerializer
 
 from . import conf
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageLimitPagination
-from .permissions import IsAuthorOrReadOnly
+from .permissions import AuthorStaffOrReadOnly
 from .service import add_or_delete_obj, get_shopping_cart_txt
 
 User = get_user_model()
@@ -88,7 +89,7 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     serializer_class = RecipesSerializer
     pagination_class = PageLimitPagination
-    permission_classes = IsAuthorOrReadOnly,
+    permission_classes = AuthorStaffOrReadOnly,
     filterset_class = RecipeFilter
     filter_backends = (DjangoFilterBackend,)
     queryset = Recipes.objects.all()

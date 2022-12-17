@@ -32,7 +32,7 @@ def get_shopping_cart_txt(query, user):
         ) for ing in ingredients
     ]
     response = HttpResponse(
-        (description + ",".join(shp_list)),
+        (description + ''.join(shp_list)),
         content_type='text.txt; charset=utf-8'
     )
     response['Content-Disposition'] = f'attachment; filename={filename}'
