@@ -25,8 +25,8 @@ class Ingredients(models.Model):
 
     class Meta:
         ordering = ['id']
-        verbose_name = 'Интгридиент'
-        verbose_name_plural = 'Ингридиенты'
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
 
 
 class Tag(models.Model):
