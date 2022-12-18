@@ -1,4 +1,4 @@
-![Foodgram](https://github.com/Andrey-Kolchugin/foodgram-project-react/actions/workflows/yamdb_workflow.yml/badge.svg)
+![Foodgram](https://github.com/Andrey-Kolchugin/foodgram-project-react/actions/workflows/final_workflow.yml/badge.svg)
 # Foodgram
 
 ## Описание
