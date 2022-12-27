@@ -16,13 +16,6 @@
 
 http://bonappetit.sytes.net
 
-http://158.160.38.133/
-
-## Учетная запись администратора:
-Email: dmitry@admin.ru
-Password: a17122022
-
-
 
 ---
 
