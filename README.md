@@ -1,4 +1,3 @@
-![Foodgram](https://github.com/Andrey-Kolchugin/foodgram-project-react/actions/workflows/final_workflow.yml/badge.svg)
 # Foodgram
 
 ## Описание
@@ -12,9 +11,6 @@
 
 ---
 
-## Проект доступен по адресу:
-
-http://bonappetit.sytes.net
 
 
 ---
